@@ -58,6 +58,16 @@ npm install
 
 ```
 
+### Go to cohere
+
+https://cohere.com/
+
+### Register and get your trial api key, not the production one. trial is the free one
+
+https://dashboard.cohere.com/api-keys
+
+### Now paste it in the env as the value of COHERE_API_KEY
+
 ### Env file structure
 
 ```
@@ -66,6 +76,8 @@ npm install
 MONGO_URI=
 
 JWT_SECRET=
+
+COHERE_API_KEY=
 
 
 ```
