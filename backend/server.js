@@ -33,7 +33,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5012;
 
 // this is kinda the middleware for the server
 app.use(cors());
@@ -44,7 +44,7 @@ mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
-    .then(() => console.log('Connected to MongoDB'))
+    .then(() => console.log(`Connected to MongoDB ${process.env.MONGO_URI}`))
     .catch(err => console.error('MongoDB connection error:', err));
 
 // User model
@@ -246,6 +246,9 @@ function getTokenCost(level) {
     };
     return tokenCosts[level] || tokenCosts[Object.keys(tokenCosts).reduce((a, b) => Math.abs(b - level) < Math.abs(a - level) ? b : a)];
 }
+
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
