@@ -150,6 +150,31 @@ const createPage = async (req, res) => {
     }
 }
 
+
+const createDatabase = async(req, res) => {
+    try {
+        const {parent, properties } = req.body;
+        const user = await User.findById(req.user._id);
+        if (!user.notionDetails) {
+            return res.status(404).json({ message: "Notion details not found" });
+        }
+        const response = await fetch('https://api.notion.com/v1/databases', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.notionDetails.access_token}`,
+                'Notion-Version': '2022-06-28'
+            },
+            body: JSON.stringify({parent, properties})
+        });
+        const data = await response.json();
+        res.status(200).json({message: "success", data });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     getNotionAuthUrl,
     notionAuthCallback,
@@ -157,4 +182,5 @@ module.exports = {
     retrievePage,
     retrieveDatabase,
     createPage,
+    createDatabase
 }

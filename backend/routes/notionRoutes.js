@@ -1,4 +1,4 @@
-const {getNotionAuthUrl, notionAuthCallback, searchPages, retrievePage, retrieveDatabase, createPage} = require("../controllers/notionController")
+const {getNotionAuthUrl, notionAuthCallback, searchPages, retrievePage, retrieveDatabase, createPage, createDatabase} = require("../controllers/notionController")
 const express = require('express');
 const notionRouter = express.Router();
 const verifyToken = require('../middlewares/auth');
@@ -9,6 +9,7 @@ notionRouter.get('/notion/search', verifyToken, searchPages);
 notionRouter.get('/notion/pages/:pageId', verifyToken, retrievePage)
 notionRouter.get('/notion/databases/:databaseId', verifyToken, retrieveDatabase)
 notionRouter.post('/notion/pages', verifyToken, createPage)
+notionRouter.post('/notion/databases', verifyToken, createDatabase)
 
 
 module.exports = notionRouter;
