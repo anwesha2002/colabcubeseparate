@@ -39,7 +39,73 @@ const notionAuthCallback = async (req, res) => {
     }
 }
 
+
+const searchPages = async (req, res) => {
+    try {
+        const { query } = req.query;
+        console.log(req.user)
+        const user = await User.findById(req.user._id);
+        if (!user.notionDetails) {
+            return res.status(404).json({ message: "Notion details not found" });
+        }
+        let filterValue;
+        if (!query) {
+            filterValue = "page";
+        } else {
+            filterValue = query;
+        }
+        const queryData = {
+            "filter": {
+                "value": `${filterValue}`,
+                "property": "object"
+            },
+            "sort":{
+            "direction":"ascending",
+            "timestamp":"last_edited_time"
+            }
+        }
+        const response = await fetch("https://api.notion.com/v1/search", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.notionDetails.access_token}`,
+                'Notion-Version': '2022-06-28'
+            },
+            body: JSON.stringify(queryData)
+        });
+        const data = await response.json();
+        res.status(200).json({message: "success", data });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
+const retrievePage = async (req, res) => {
+    try {
+        const { pageId } = req.params;
+        const user = await User.findById(req.user._id);
+        if (!user.notionDetails) {
+            return res.status(404).json({ message: "Notion details not found" });
+        }
+        const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.notionDetails.access_token}`,
+                'Notion-Version': '2022-06-28'
+            }
+        });
+        const data = await response.json();
+        res.status(200).json({message: "success", data });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     getNotionAuthUrl,
     notionAuthCallback,
+    searchPages,
+    retrievePage
 }
