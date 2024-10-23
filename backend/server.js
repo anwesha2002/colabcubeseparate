@@ -1,39 +1,16 @@
-// // server.js
-// const express = require('express');
-// const mongoose = require('mongoose');
-// const cors = require('cors');
-// const userRoutes = require('./routes/users');
-// const authRoutes = require('./routes/auth');
-// const taskRoutes = require('./routes/tasks');
-
-// require('dotenv').config(); // Load environment variables
-
-// const app = express();
-// app.use(cors());
-// app.use(express.json());
-
-// mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-//     .then(() => console.log('MongoDB connected'))
-//     .catch(err => console.error('MongoDB connection error:', err));
-
-// app.use('/api/users', userRoutes);
-// app.use('/api/auth', authRoutes);
-// app.use('/api/tasks', taskRoutes);
-
-// app.listen(5000, () => {
-//     console.log('Server is running on port 5000');
-// });
-
-
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('./models/User');
+const authRouter = require('./routes/authRoutes');
+const notionRouter = require('./routes/notionRoutes');
+const verifyToken = require('./middlewares/auth')
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5012;
 
 // this is kinda the middleware for the server
 app.use(cors());
@@ -44,55 +21,13 @@ mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
-    .then(() => console.log('Connected to MongoDB'))
+    .then(() => console.log(`Connected to MongoDB ${process.env.MONGO_URI}`))
     .catch(err => console.error('MongoDB connection error:', err));
-
-// User model
-const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    level: { type: Number, default: 1 },
-    xp: { type: Number, default: 0 },
-    tokens: { type: Number, default: 1000 },
-    connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    tasks: [{
-        description: String,
-        completed: { type: Boolean, default: false }
-    }]
-});
-
-const User = mongoose.model('User', userSchema);
-
-// Middleware to verify jwt token
-const verifyToken = (req, res, next) => {
-    const token = req.header('Authorization');
-    if (!token) return res.status(401).json({ message: 'Access denied' });
-
-    try {
-        const verified = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = verified;
-        next();
-    } catch (error) {
-        res.status(400).json({ message: 'Invalid token' });
-    }
-};
 
 
 // Routes
-app.post('/api/register', async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ username, email, password: hashedPassword });
-        await user.save();
-
-        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-        res.status(201).json({ token, userId: user._id });
-    } catch (error) {
-        res.status(500).json({ message: 'Error registering user', error: error.message });
-    }
-});
+app.use('/api', authRouter);
+app.use('/api', notionRouter);
 
 app.post('/api/login', async (req, res) => {
     try {
@@ -112,8 +47,8 @@ app.post('/api/login', async (req, res) => {
 
 app.get('/api/user', verifyToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).select('-password');
-        res.json(user);
+        const user = await User.findById(req.user._id);
+        res.status(200).json({message: "User fetch successful", data: user.toJSON()});
     } catch (error) {
         res.status(500).json({ message: 'Error fetching user data', error: error.message });
     }
@@ -246,6 +181,9 @@ function getTokenCost(level) {
     };
     return tokenCosts[level] || tokenCosts[Object.keys(tokenCosts).reduce((a, b) => Math.abs(b - level) < Math.abs(a - level) ? b : a)];
 }
+
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
