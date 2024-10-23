@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 const authRouter = require('./routes/authRoutes');
+const notionRouter = require('./routes/notionRoutes');
 const verifyToken = require('./middlewares/auth')
 
 const app = express();
@@ -26,6 +27,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Routes
 app.use('/api', authRouter);
+app.use('/api', notionRouter);
 
 app.post('/api/login', async (req, res) => {
     try {

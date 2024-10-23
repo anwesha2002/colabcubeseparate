@@ -11,7 +11,20 @@ const userSchema = new mongoose.Schema({
     tasks: [{
         description: String,
         completed: { type: Boolean, default: false }
-    }]
+    }],
+    notionDetails: {
+        access_token: String,
+        bot_id: String,
+        duplicated_template_id: String,
+        owner: {
+          workspace: Boolean,
+        },
+        workspace_icon: String,
+        workspace_id: String,
+        workspace_name: String
+      },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 // implement the toJSON method to remove the password field when converting to JSON
