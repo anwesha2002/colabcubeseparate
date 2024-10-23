@@ -175,6 +175,57 @@ const createDatabase = async(req, res) => {
     }
 }
 
+const updatePageProperties = async(req, res) => {
+    try {
+        const { properties } = req.body;
+        const { pageId } = req.params;
+        const user = await User.findById(req.user._id);
+        if (!user.notionDetails) {
+            return res.status(404).json({ message: "Notion details not found" });
+        }
+        const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.notionDetails.access_token}`,
+                'Notion-Version': '2022-06-28'
+            },
+            body: JSON.stringify({properties})
+        });
+        const data = await response.json();
+        res.status(200).json({message: "success", data });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
+const updateDatabase = async (req, res) => {
+    try {
+        const { databaseId } = req.params;
+        const { payload } = req.body;
+        const user = await User.findById(req.user._id);
+        if (!user.notionDetails) {
+            return res.status(404).json({ message: "Notion details not found" });
+        }
+        const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.notionDetails.access_token}`,
+                'Notion-Version': '2022-06-28'
+            },
+            body: JSON.stringify({payload})
+        });
+        const data = await response.json();
+        res.status(200).json({message: "success", data });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     getNotionAuthUrl,
     notionAuthCallback,
@@ -182,5 +233,7 @@ module.exports = {
     retrievePage,
     retrieveDatabase,
     createPage,
-    createDatabase
+    createDatabase,
+    updatePageProperties,
+    updateDatabase,
 }
